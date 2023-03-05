@@ -53,6 +53,8 @@ void UMyAnimInstance::JumpToSection(int32 SectionIndex)
 
 void UMyAnimInstance::AnimNotify_AttackHit()
 {
-	UE_LOG(LogTemp, Log, TEXT("AnimNotify_AttackHit"));
 	//여기에 뭐.. 해당 타이밍에 소리를 넣는다던지 하는 기타 작업을 하면 됨
+	//UE_LOG(LogTemp, Log, TEXT("AnimNotify_AttackHit"));
+	
+	OnAttackHit.Broadcast();
 }

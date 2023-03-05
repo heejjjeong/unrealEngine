@@ -6,6 +6,8 @@
 #include "Animation/AnimInstance.h"
 #include "MyAnimInstance.generated.h"
 
+//Delegate
+DECLARE_MULTICAST_DELEGATE(FOnAttackHit);
 /**
  * 
  */
@@ -26,11 +28,14 @@ public:
 	//섹션을 골라주는 함수
 	void JumpToSection(int32 SectionIndex);
 
+
+public:
+	FOnAttackHit OnAttackHit;
+
 private:
 	UFUNCTION()
 	//노티파이함수는 지정해준 노티파이 이름을 AnimNotify_뒤에 붙여주면 됨
 	void AnimNotify_AttackHit();
-
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true));
@@ -47,5 +52,4 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true));
 	float Vertical;
-
 };
