@@ -6,6 +6,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "MyAnimInstance.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -28,19 +29,20 @@ AMyCharacter::AMyCharacter()
 
 	//Mesh 생성
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SM(TEXT("SkeletalMesh'/Game/ParagonGreystone/Characters/Heroes/Greystone/Meshes/Greystone.Greystone'"));
-
+	
 	if (SM.Succeeded())
 	{
 		GetMesh()->SetSkeletalMesh(SM.Object);
 	}
-
 }
 
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	AnimInstance = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
+	AnimInstance->OnMontageEnded.AddDynamic(this,&AMyCharacter::OnAttackMontageEnded);
 }
 
 // Called every frame
@@ -55,33 +57,53 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	//그냥 누르면 점프하는 Action이어서 BindAction사용 ( 축을 받아서 작업하는게 아니기 때문 )
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AMyCharacter::Jump);
+	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AMyCharacter::Attack);
+
+
 	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AMyCharacter::UpDown);
 	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AMyCharacter::LeftRight);
 	PlayerInputComponent->BindAxis(TEXT("Yaw"), this, &AMyCharacter::Yaw);
 
 }
 
+void AMyCharacter::Attack()
+{
+	if (isAttack)
+		return;
+
+	AnimInstance->PlayAttackMontage();
+
+
+	//UE_LOG(LogTemp, Log, TEXT("%d"), AttackIndex);
+	AnimInstance->JumpToSection(AttackIndex);
+
+	AttackIndex = (AttackIndex + 1) % 3;
+
+	isAttack = true;
+}
+
 void AMyCharacter::UpDown(float value)
 {
-	if (0.f == value)
-	{
-		return;
-	}
 	//UE_LOG(LogTemp, Warning, TEXT("UpDown %f"), value);
+	UpDownValue = value;
 	AddMovementInput(GetActorForwardVector(), value);
 }
 
 void AMyCharacter::LeftRight(float value)
 {
-	if (0.f == value)
-	{
-		return;
-	}
 	//UE_LOG(LogTemp, Warning, TEXT("LeftRight %f"), value);
+	LeftRightValue = value;
 	AddMovementInput(GetActorRightVector(), value);
 }
 
 void AMyCharacter::Yaw(float value)
 {
 	AddControllerYawInput(value);
+}
+
+void AMyCharacter::OnAttackMontageEnded(UAnimMontage* AM, bool bInterrupted)
+{
+	isAttack = false;
 }
